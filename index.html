@@ -31,7 +31,12 @@ $('copyBtn').addEventListener('click',async()=>{try{await navigator.clipboard.wr
 let lastRequest=0;
 function setStatus(message,ready=false){const el=$('status');el.textContent=message;el.className='status'+(ready?' ready':'');}
 function showRanking(data){
-  const rows=Array.isArray(data.linhas)?data.linhas:[];
+  // Defesa adicional: o navegador também ordena por ACERTOS, nunca por pontos de bônus.
+  const rows=(Array.isArray(data.linhas)?data.linhas:[]).filter(p=>p.concluiu!==false)
+    .slice().sort((a,b)=>(Number(b.acertos)||0)-(Number(a.acertos)||0)
+      || (Number(a.ms)||0)-(Number(b.ms)||0)
+      || String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+  rows.forEach((p,i)=>{p.pos=i+1;});
   if(data.bloqueado || !rows.length && !data.fechado){ $('podiumSection').hidden=true;setStatus(data.msg||'Classificação ainda não liberada pelo professor.');return; }
   if(!rows.length){$('podiumSection').hidden=true;setStatus('A classificação foi liberada, mas ainda não há estudantes concluintes.');return;}
   $('podiumSection').hidden=false;
